@@ -1,0 +1,44 @@
+{
+  "name": "lemmajet",
+  "version": "0.6.0",
+  "description": "Ultra-fast, zero-dependency micro-stemmers and micro-lemmatizers for 6 languages",
+  "type": "module",
+  "sideEffects": false,
+  "license": "MIT",
+  "author": "Michal Šrajer and LemmaJet Contributors",
+  "homepage": "https://lemmajet.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lemmajet/lemmajet.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lemmajet/lemmajet/issues"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./stemmer/*": {
+      "types": "./dist/stemmer/*.d.ts",
+      "default": "./dist/stemmer/*.js"
+    },
+    "./lemmatizer/*": {
+      "types": "./dist/lemmatizer/*.d.ts",
+      "default": "./dist/lemmatizer/*.js"
+    }
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {}
+}
+

@@ -1,0 +1,31 @@
+# OS & IDE metadata
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.ruff_cache/
+.venv/
+pkg/py/dist/
+pkg/py/uv.lock
+
+# Node / JS artifacts
+node_modules/
+package-lock.json
+*.tgz
+
+# Snowball transpilation artifacts
+*.c
+*.h
+*.rs
+*.go
+*.java
+

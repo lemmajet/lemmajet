@@ -1,0 +1,192 @@
+name: Release Packages & GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (validate and build without publishing to registries)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  # -------------------------------------------------------------
+  # Quality Gate 1: Python Runtime Compatibility Matrix
+  # -------------------------------------------------------------
+  test-py:
+    name: Test Python (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+      - name: Run Python Smoke Tests
+        working-directory: pkg/py
+        run: |
+          uv run --python ${{ matrix.python-version }} pytest tests/
+
+  # -------------------------------------------------------------
+  # Quality Gate 2: JavaScript Runtime & Browser-Safety Matrix
+  # -------------------------------------------------------------
+  test-js:
+    name: Test Node.js (v${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['20', '22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Run Node Tests & Browser Safety Audit
+        working-directory: pkg/js
+        run: |
+          npm test
+
+  # -------------------------------------------------------------
+  # Quality Gate 3: Snowball Structural Verification
+  # -------------------------------------------------------------
+  test-sbl:
+    name: Test Snowball (.sbl Structure)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: '3.11'
+      - name: Run Snowball Structure Verification
+        env:
+          PYTHONPATH: pkg/py/src
+        run: |
+          uv run --project pkg/py pytest pkg/sbl/tests/test_sbl_structure.py
+
+  # -------------------------------------------------------------
+  # Build Distributions Gate
+  # -------------------------------------------------------------
+  build-dist:
+    name: Build Distribution Packages
+    needs: [test-py, test-js, test-sbl]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build Python wheel and sdist
+        working-directory: pkg/py
+        run: uv build
+      - name: Pack NPM tarball
+        working-directory: pkg/js
+        run: npm pack
+      - name: Upload Python Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-python
+          path: pkg/py/dist/
+      - name: Upload NPM Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-npm
+          path: pkg/js/*.tgz
+
+  # -------------------------------------------------------------
+  # Publish to PyPI via OIDC Trusted Publishing
+  # -------------------------------------------------------------
+  publish-pypi:
+    name: Publish to PyPI (OIDC)
+    needs: [build-dist]
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
+    permissions:
+      id-token: write
+    steps:
+      - name: Download Python Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-python
+          path: pkg/py/dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: pkg/py/dist/
+
+  # -------------------------------------------------------------
+  # Publish to NPM with SLSA Provenance
+  # -------------------------------------------------------------
+  publish-npm:
+    name: Publish to NPM (Provenance)
+    needs: [build-dist]
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Publish to NPM with Provenance
+        working-directory: pkg/js
+        run: |
+          npm publish --provenance --access public
+
+  # -------------------------------------------------------------
+  # GitHub Release Packaging
+  # -------------------------------------------------------------
+  release-gh:
+    name: Create GitHub Release
+    needs: [build-dist]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Python Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-python
+          path: pkg/py/dist/
+      - name: Download NPM Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-npm
+          path: pkg/js/
+      # Package Snowball Tarball & Zip
+      - name: Package Snowball Tarball & Zip
+        run: |
+          mkdir -p pkg/sbl/dist
+          tar -czf pkg/sbl/dist/lemmajet-sbl-${GITHUB_REF_NAME#v}.tar.gz -C pkg sbl/
+          zip -rq pkg/sbl/dist/lemmajet-sbl-${GITHUB_REF_NAME#v}.zip pkg/sbl/
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            pkg/py/dist/*.whl
+            pkg/py/dist/*.tar.gz
+            pkg/js/*.tgz
+            pkg/sbl/dist/lemmajet-sbl-*.tar.gz
+            pkg/sbl/dist/lemmajet-sbl-*.zip
+
