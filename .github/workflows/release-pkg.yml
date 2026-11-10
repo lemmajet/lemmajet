@@ -173,7 +173,7 @@ jobs:
         with:
           name: dist-npm
           path: pkg/js/
-      # Package Snowball Tarball & Zip
+      # Staged pending Snowball emitter bug fix per D-12:
       - name: Package Snowball Tarball & Zip
         run: |
           mkdir -p pkg/sbl/dist
@@ -187,6 +187,6 @@ jobs:
             pkg/py/dist/*.whl
             pkg/py/dist/*.tar.gz
             pkg/js/*.tgz
-            pkg/sbl/dist/lemmajet-sbl-*.tar.gz
-            pkg/sbl/dist/lemmajet-sbl-*.zip
+            # pkg/sbl/dist/lemmajet-sbl-*.tar.gz
+            # pkg/sbl/dist/lemmajet-sbl-*.zip
 

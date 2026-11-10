@@ -36,16 +36,16 @@ Default profiles point to `md_balanced` (medium footprint, optimal balance of pr
 
 ```javascript
 // Stemmer (ESM / TypeScript)
-import { stem, stemBatch } from "lemmajet/stemmer/pl";
+import { stem, stemWords } from "lemmajet/stemmer/pl";
 
 console.log(stem("programistami")); // -> 'programist'
-console.log(stemBatch(["książka", "książkami"])); // -> ['książk', 'książk']
+console.log(stemWords(["książka", "książkami"])); // -> ['książk', 'książk']
 
 // Lemmatizer (ESM / TypeScript)
-import { lemmatize, lemmatizeBatch } from "lemmajet/lemmatizer/pl";
+import { lemmatize, lemmatizeWords } from "lemmajet/lemmatizer/pl";
 
 console.log(lemmatize("poszliśmy")); // -> 'pójść'
-console.log(lemmatizeBatch(["koty", "psami"])); // -> ['kot', 'pies']
+console.log(lemmatizeWords(["koty", "psami"])); // -> ['kot', 'pies']
 ```
 
 Default exports are also supported:
@@ -58,7 +58,35 @@ import lemmatize from "lemmajet/lemmatizer/de";
 console.log(lemmatize("Häuser")); // -> 'Haus'
 ```
 
-### 2. Specific Pareto Profile
+### 2. Snowball Drop-In Compatibility
+
+LemmaJet provides drop-in compatibility with official Snowball JavaScript algorithms (`stemmer-snowball.js`):
+
+```javascript
+// Import language-specific class or Snowball camelCase functions:
+import { EnglishStemmer, stemWord, stemWords } from "lemmajet/stemmer/en";
+
+// 1. Function API (snowball stemWord / stemWords)
+console.log(stemWord("running")); // -> 'run'
+console.log(stemWords(["running", "faster"])); // -> ['run', 'fast']
+
+// 2. Class instance API (identical to stemmer-snowball)
+const stemmer = new EnglishStemmer();
+console.log(stemmer.stemWord("running")); // -> 'run'
+console.log(stemmer.stemWords(["cats", "dogs"])); // -> ['cat', 'dog']
+
+// 3. Static class methods also supported:
+console.log(EnglishStemmer.stemWord("running")); // -> 'run'
+console.log(EnglishStemmer.stemWords(["cats", "dogs"])); // -> ['cat', 'dog']
+
+// Lemmatizers also support drop-in Snowball stemWord / stemWords:
+import { EnglishLemmatizer } from "lemmajet/lemmatizer/en";
+const lemmatizer = new EnglishLemmatizer();
+console.log(lemmatizer.stemWord("went")); // -> 'go' (true headword lemma!)
+console.log(lemmatizer.stemWords(["mice", "went"])); // -> ['mouse', 'go']
+```
+
+### 3. Specific Pareto Profile
 
 Import any specific Pareto operating point directly:
 
@@ -70,7 +98,7 @@ import { stem } from "lemmajet/stemmer/pl/xl_recall";
 import { lemmatize } from "lemmajet/lemmatizer/fr/xs_balanced";
 ```
 
-### 3. Metadata Constants
+### 4. Metadata Constants
 
 ```javascript
 import { VERSION, SUPPORTED_LANGUAGES, DEFAULT_PROFILE } from "lemmajet";
@@ -102,6 +130,20 @@ console.log(`Supported: ${SUPPORTED_LANGUAGES.join(", ")}`);
 
 - **Sizes**: `xxs` (~5 KB), `xs` (~15 KB), `sm` (~40 KB), `md` (~120 KB), `lg` (~350 KB), `xl` (~1 MB)
 - **Variants**: `precision` ($F_{0.5}$), `balanced` ($F_{1.0}$), `recall` ($F_{2.0}$)
+
+---
+
+## Architecture & Optimization Internals
+
+LemmaJet models execute a unified, high-performance 4-stage inference pipeline:
+1. **Stage 1 (Surface Exception Lookup)**: $O(1)$ fast path for irregular and suppletive forms.
+2. **Stage 2 (Prefix Trie & Enclitic Stripping)**: Longest-match forward prefix stripping with protective overrides for false prefixes.
+3. **Stage 3 (Reversed Suffix-Trie Transducer)**: High-speed reversed character matching computing the longest valid `(cut, add)` rule.
+4. **Stage 3.5 (Synthetic Stem-Bridge Lookup)**: Unifies stemming and lemmatization by resolving intermediate regularized stems to canonical dictionary lemmas in $O(1)$.
+
+For deep technical specifications, TypedArray state automaton mechanics, and V8 JIT inline cache optimizations, see the bundled architecture guides:
+- [`Model Inference & Stem-Bridge Architecture`](docs/model-inference-and-bridge-architecture.md): Language-agnostic specification of the universal 4-stage inference engine and stem bridging.
+- [`JavaScript & V8 Engine Optimizations`](docs/javascript-emitter-optimizations.md): Flat `Int32Array` state machines, monomorphic object shapes, inlined exception lookups, and V8 inline caching.
 
 ---
 

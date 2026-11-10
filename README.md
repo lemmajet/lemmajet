@@ -26,9 +26,10 @@ What you ship to production is a tiny, deterministic, zero-dependency function t
 * **Tiny footprint, zero dependencies:** Compiled models range from **1.5 KB to 88 KB gzipped** (`md-balanced` profile). No PyTorch, no model weights to download at runtime, no C/Cython extensions.
 * **True dictionary headwords or stems:** Compile models in `lemma` mode (e.g., `went -> go`, `mice -> mouse`, `ludzie -> człowiek`, `gingen -> gehen`) or `stem` mode for compact search indexing.
 * **Multi-target code generation:**
-  * **JavaScript / TypeScript:** Standalone ES Module (`.js` + `.d.ts`) for browsers, Node.js, and edge runtimes.
-  * **Python:** Single zero-dependency `.py` module with bit-for-bit identical output to the JS target.
+  * **JavaScript / TypeScript (Production):** Standalone ES Module (`.js` + `.d.ts`) published on npm ([`lemmajet`](https://www.npmjs.com/package/lemmajet)) for browsers, Node.js, and edge runtimes.
+  * **Python (Production):** Single zero-dependency `.py` module published on PyPI ([`lemmajet`](https://pypi.org/project/lemmajet/)) with bit-for-bit identical output to the JS target.
   * **Snowball DSL (`.sbl`):** Transpiles the compiled model into valid Snowball source code, enabling compilation to native C (PostgreSQL `tsvector`) or Java (Apache Lucene / Elasticsearch).
+  * **Planned Native & Managed Targets:** First-class code emitters in active development for **C** (ANSI C99/C23 single-header / SQLite & PostgreSQL extensions), **Java** (zero-dependency Apache Lucene & OpenSearch analyzers), **Rust** (`no_std`-compatible zero-dependency crate), and **C#** (high-throughput `ReadOnlySpan<char>` runtime for .NET 8+).
 * **Six languages supported today:** English (`en`), Polish (`pl`), German (`de`), Spanish (`es`), French (`fr`), and Czech (`cs`), across 18 Pareto-calibrated size and objective profiles (`xxs` through `xl`).
 
 ---
@@ -43,32 +44,62 @@ While the repository code is being finalized for public release, you can test th
 
 ---
 
+## Installation
+
+```bash
+# npm (JavaScript / TypeScript / Node.js)
+npm install lemmajet
+
+# pip (Python 3.10+)
+pip install lemmajet
+```
+
+---
+
 ## Target API Preview
 
 ### JavaScript / TypeScript (ES Module)
 
 ```javascript
-import { lemmatize, lemmatizeBatch } from './lemmatizer_en_md-balanced.js';
+// From published npm package:
+import { lemmatize, lemmatizeWords } from 'lemmajet/lemmatizer/en';
+// Or direct standalone file:
+// import { lemmatize, lemmatizeWords } from './lemmatizer_en_md-balanced.js';
 
 lemmatize('children');   // -> 'child'
 lemmatize('went');       // -> 'go'
 lemmatize('phenomena');  // -> 'phenomenon'
 
-lemmatizeBatch(['mice', 'were', 'running', 'faster']);
+lemmatizeWords(['mice', 'were', 'running', 'faster']);
 // -> ['mouse', 'be', 'run', 'fast']
+
+// Snowball drop-in compatibility (stemmer-snowball API):
+import { EnglishStemmer, stemWord, stemWords } from 'lemmajet/stemmer/en';
+const stemmer = new EnglishStemmer();
+stemmer.stemWord('running'); // -> 'run'
+stemmer.stemWords(['running', 'faster']); // -> ['run', 'fast']
 ```
 
 ### Python (Zero-Dependency Module)
 
 ```python
-from lemmatizer_pl_md_balanced import lemmatize, lemmatize_batch
+# From published PyPI package:
+from lemmajet.lemmatizer.pl import lemmatize, lemmatize_words
+# Or direct standalone file:
+# from lemmatizer_pl_md_balanced import lemmatize, lemmatize_words
 
 lemmatize("ludziom")       # -> "człowiek"
 lemmatize("poszliśmy")     # -> "pójść"
 lemmatize("najlepszych")   # -> "dobry"
 
-lemmatize_batch(["dzieci", "jadły", "dojrzałe", "jabłka"])
+lemmatize_words(["dzieci", "jadły", "dojrzałe", "jabłka"])
 # -> ["dziecko", "jeść", "dojrzały", "jabłko"]
+
+# Snowball drop-in compatibility (snowballstemmer API):
+from lemmajet.stemmer.en import EnglishStemmer
+stemmer = EnglishStemmer()
+stemmer.stemWord("running")  # -> "run"
+stemmer.stemWords(["running", "faster"])  # -> ["run", "fast"]
 ```
 
 ---
@@ -86,11 +117,17 @@ LemmaJet compiles models through a 4-stage pipeline:
 
 ## Release Roadmap & Status
 
-We are rolling out the open-source artifacts in three stages over the coming days:
-
 - [x] **Stage 1 (Live):** Interactive browser demo and multi-language benchmark suite at [lemmajet.org](https://lemmajet.org).
-- [ ] **Stage 2 (Up next):** Precompiled zero-dependency lemmatizers and stemmers for all 6 languages (`npm` and `PyPI` packages + standalone file downloads).
-- [ ] **Stage 3:** Full `lemmajet` Python compiler CLI, Pareto calibration suite, and Snowball `.sbl` emitter source code.
+- [x] **Stage 2 (Live):** Precompiled zero-dependency lemmatizers and stemmers for all 6 languages:
+  - **npm package:** [`lemmajet`](https://www.npmjs.com/package/lemmajet) (ESM + full TypeScript declarations)
+  - **PyPI package:** [`lemmajet`](https://pypi.org/project/lemmajet/) (zero-dependency pure Python)
+  - **Standalone downloads:** Direct `.js` / `.py` artifacts per language and profile
+- [ ] **Stage 3 (Upcoming Targets):** Dedicated native and managed runtime targets:
+  - **C:** Zero-dependency ANSI C99 / C23 single-header & static library for embedded systems, SQLite, and PostgreSQL `tsvector` extensions.
+  - **Java:** Zero-dependency pure Java runtime for Apache Lucene, OpenSearch, and Elasticsearch analyzers.
+  - **Rust:** High-performance `no_std`-compatible zero-dependency crate for search engines, embedded, and WebAssembly runtimes.
+  - **C# / .NET:** High-throughput `ReadOnlySpan<char>` runtime for .NET 8+ and Lucene.NET.
+- [ ] **Stage 4:** Full `lemmajet` Python compiler CLI, Pareto calibration suite, and Snowball `.sbl` emitter source code.
 
 **Star or Watch this repository** to get notified as soon as the precompiled packages and compiler source code are pushed.
 

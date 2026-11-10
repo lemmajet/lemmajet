@@ -1,1 +1,1 @@
-export { lemmatize, lemmatizeBatch, default } from './es/md_balanced.js';
+export { Lemmatizer, SpanishLemmatizer, Stemmer, SpanishStemmer, clearCache, default, lemmatize, lemmatizeWord, lemmatizeWords, stem, stemWord, stemWords } from './es/md_balanced.js';

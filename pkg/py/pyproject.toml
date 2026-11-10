@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lemmajet"
-version = "0.6.0"
+version = "0.7.0"
 description = "Ultra-fast, zero-dependency micro-stemmers and micro-lemmatizers for 6 languages"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -39,8 +39,14 @@ Homepage = "https://lemmajet.org"
 Repository = "https://github.com/lemmajet/lemmajet"
 Issues = "https://github.com/lemmajet/lemmajet/issues"
 
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/docs", "/README.md", "/LICENSE"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/lemmajet"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"docs" = "docs"
 
 [tool.ruff]
 line-length = 100

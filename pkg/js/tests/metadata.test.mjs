@@ -18,7 +18,7 @@ import defaultExport, {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 test("metadata constants exports", () => {
-  assert.equal(VERSION, "0.6.0");
+  assert.equal(VERSION, "0.7.0");
   assert.deepEqual(SUPPORTED_LANGUAGES, ["pl", "en", "de", "es", "fr", "cs"]);
   assert.deepEqual(SIZES, ["xxs", "xs", "sm", "md", "lg", "xl"]);
   assert.deepEqual(VARIANTS, ["precision", "balanced", "recall"]);
@@ -27,7 +27,7 @@ test("metadata constants exports", () => {
   assert.equal(DEFAULT_VARIANT, "balanced");
   assert.equal(DEFAULT_PROFILE, "md_balanced");
 
-  assert.equal(defaultExport.VERSION, "0.6.0");
+  assert.equal(defaultExport.VERSION, "0.7.0");
   assert.deepEqual(defaultExport.SUPPORTED_LANGUAGES, SUPPORTED_LANGUAGES);
   assert.deepEqual(defaultExport.SIZES, SIZES);
   assert.deepEqual(defaultExport.VARIANTS, VARIANTS);
@@ -42,7 +42,7 @@ test("package.json export manifest compliance", () => {
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
 
   assert.equal(pkg.name, "lemmajet");
-  assert.equal(pkg.version, "0.6.0");
+  assert.equal(pkg.version, "0.7.0");
   assert.equal(pkg.type, "module");
   assert.equal(pkg.sideEffects, false);
   assert.deepEqual(pkg.dependencies, {});

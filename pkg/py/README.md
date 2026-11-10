@@ -35,19 +35,44 @@ Default profiles point to `md_balanced` (medium footprint, optimal balance of pr
 
 ```python
 # Stemmer
-from lemmajet.stemmer.pl import stem, stem_batch
+from lemmajet.stemmer.pl import stem, stem_words
 
 print(stem("programistami"))  # -> 'programist'
-print(stem_batch(["książka", "książkami"]))  # -> ['książk', 'książk']
+print(stem_words(["książka", "książkami"]))  # -> ['książk', 'książk']
 
 # Lemmatizer
-from lemmajet.lemmatizer.pl import lemmatize, lemmatize_batch
+from lemmajet.lemmatizer.pl import lemmatize, lemmatize_words
 
 print(lemmatize("poszliśmy"))  # -> 'pójść'
-print(lemmatize_batch(["koty", "psami"]))  # -> ['kot', 'pies']
+print(lemmatize_words(["koty", "psami"]))  # -> ['kot', 'pies']
 ```
 
-### 2. Specific Profile
+### 2. Snowball Drop-In Compatibility
+
+LemmaJet provides 100% API compatibility with `snowballstemmer`:
+
+```python
+# Import language-specific class or Snowball-compatible functions:
+from lemmajet.stemmer.en import EnglishStemmer, stemWord, stemWords
+
+# 1. Snowball-style functions (camelCase and snake_case supported):
+print(stemWord("running"))  # -> 'run'
+print(stemWords(["running", "faster"]))  # -> ['run', 'fast']
+
+# 2. Snowball class instance (identical interface to snowballstemmer):
+stemmer = EnglishStemmer()
+print(stemmer.stemWord("running"))  # -> 'run'
+print(stemmer.stemWords(["cats", "dogs"]))  # -> ['cat', 'dog']
+
+# Lemmatizers also support the Snowball interface as drop-in upgrades:
+from lemmajet.lemmatizer.en import EnglishStemmer as EnglishLemmatizer
+
+lemmatizer = EnglishLemmatizer()
+print(lemmatizer.stemWord("went"))  # -> 'go' (true headword lemma!)
+print(lemmatizer.stemWords(["mice", "went"]))  # -> ['mouse', 'go']
+```
+
+### 3. Specific Profile
 
 You can import specific Pareto operating points directly:
 
@@ -63,7 +88,7 @@ from lemmajet.lemmatizer.de.lg_precision import lemmatize
 print(lemmatize("Häuser"))
 ```
 
-### 3. Dynamic Model Loading
+### 4. Dynamic Model Loading
 
 Load models programmatically by language, mode, size, and variant:
 
@@ -100,6 +125,20 @@ print(mod.stem("estudiantes"))
 
 - **Sizes**: `xxs` (~5 KB), `xs` (~15 KB), `sm` (~40 KB), `md` (~120 KB), `lg` (~350 KB), `xl` (~1 MB)
 - **Variants**: `precision` ($F_{0.5}$), `balanced` ($F_{1.0}$), `recall` ($F_{2.0}$)
+
+---
+
+## Architecture & Optimization Internals
+
+LemmaJet models execute a unified, high-performance 4-stage inference pipeline:
+1. **Stage 1 (Surface Exception Lookup)**: $O(1)$ fast path for irregular and suppletive forms.
+2. **Stage 2 (Prefix Trie & Enclitic Stripping)**: Longest-match forward prefix stripping with protective overrides for false prefixes.
+3. **Stage 3 (Reversed Suffix-Trie Transducer)**: High-speed reversed character matching computing the longest valid `(cut, add)` rule.
+4. **Stage 3.5 (Synthetic Stem-Bridge Lookup)**: Unifies stemming and lemmatization by resolving intermediate regularized stems to canonical dictionary lemmas in $O(1)$.
+
+For deep technical specifications, bytecode analysis, and VM optimization details, see the bundled architecture guides:
+- [`Model Inference & Stem-Bridge Architecture`](docs/model-inference-and-bridge-architecture.md): Language-agnostic specification of the universal 4-stage inference engine and stem bridging.
+- [`Python Runtime & Bytecode Optimizations`](docs/python-emitter-optimizations.md): CPython bytecode, inverted radix search, negative slicing, and caching techniques.
 
 ---
 

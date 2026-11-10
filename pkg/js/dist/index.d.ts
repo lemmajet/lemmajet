@@ -17,20 +17,86 @@ export type ProfileVariant = "precision" | "balanced" | "recall";
 export type ModelMode = "stemmer" | "lemmatizer" | "stem" | "lemma";
 
 export type StemmerFn = (word: string) => string;
-export type BatchStemmerFn = (words: string[]) => string[];
+export type WordStemmerFn = (word: string) => string;
+export type WordsStemmerFn = (words: readonly string[]) => string[];
 export type LemmatizerFn = (word: string) => string;
-export type BatchLemmatizerFn = (words: string[]) => string[];
+export type WordLemmatizerFn = (word: string) => string;
+export type WordsLemmatizerFn = (words: readonly string[]) => string[];
+export type ClearCacheFn = () => void;
+
+export class Stemmer {
+  constructor(options?: { cacheSize?: number });
+  static stem(word: string): string;
+  static stemWord(word: string): string;
+  static stemWords(words: readonly string[]): string[];
+  static clearCache(): void;
+
+  stem(word: string): string;
+  stemWord(word: string): string;
+  stemWords(words: readonly string[]): string[];
+  clearCache(): void;
+}
+
+export class Lemmatizer {
+  constructor(options?: { cacheSize?: number });
+  static lemmatize(word: string): string;
+  static lemmatizeWord(word: string): string;
+  static lemmatizeWords(words: readonly string[]): string[];
+  static stem(word: string): string;
+  static stemWord(word: string): string;
+  static stemWords(words: readonly string[]): string[];
+  static clearCache(): void;
+
+  lemmatize(word: string): string;
+  lemmatizeWord(word: string): string;
+  lemmatizeWords(words: readonly string[]): string[];
+  stem(word: string): string;
+  stemWord(word: string): string;
+  stemWords(words: readonly string[]): string[];
+  clearCache(): void;
+}
+
+export interface CallableStemmer {
+  (word: string): string;
+  new (options?: { cacheSize?: number }): Stemmer;
+  stem: StemmerFn;
+  stemWord: WordStemmerFn;
+  stemWords: WordsStemmerFn;
+  clearCache: ClearCacheFn;
+}
+
+export interface CallableLemmatizer {
+  (word: string): string;
+  new (options?: { cacheSize?: number }): Lemmatizer;
+  lemmatize: LemmatizerFn;
+  lemmatizeWord: WordLemmatizerFn;
+  lemmatizeWords: WordsLemmatizerFn;
+  stem: StemmerFn;
+  stemWord: WordStemmerFn;
+  stemWords: WordsStemmerFn;
+  clearCache: ClearCacheFn;
+}
 
 export interface StemmerModule {
   stem: StemmerFn;
-  stemBatch: BatchStemmerFn;
-  default: StemmerFn;
+  stemWord: WordStemmerFn;
+  stemWords: WordsStemmerFn;
+  clearCache: ClearCacheFn;
+  Stemmer: typeof Stemmer;
+  default: CallableStemmer;
 }
 
 export interface LemmatizerModule {
   lemmatize: LemmatizerFn;
-  lemmatizeBatch: BatchLemmatizerFn;
-  default: LemmatizerFn;
+  lemmatizeWord: WordLemmatizerFn;
+  lemmatizeWords: WordsLemmatizerFn;
+  stem: StemmerFn;
+  stemWord: WordStemmerFn;
+  stemWords: WordsStemmerFn;
+  clearCache: ClearCacheFn;
+  Lemmatizer: typeof Lemmatizer;
+  Stemmer: typeof Lemmatizer;
+  default: CallableLemmatizer;
 }
 
 declare const _default: {

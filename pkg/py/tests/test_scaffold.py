@@ -8,7 +8,7 @@ import lemmajet
 
 
 def test_metadata_constants() -> None:
-    assert lemmajet.__version__ == "0.6.0"
+    assert lemmajet.__version__ == "0.7.0"
     assert lemmajet.SUPPORTED_LANGUAGES == ("pl", "en", "de", "es", "fr", "cs")
     assert lemmajet.SIZES == ("xxs", "xs", "sm", "md", "lg", "xl")
     assert lemmajet.VARIANTS == ("precision", "balanced", "recall")

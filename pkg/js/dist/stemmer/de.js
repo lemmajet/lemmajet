@@ -1,1 +1,1 @@
-export { stem, stemBatch, default } from './de/md_balanced.js';
+export { Stemmer, GermanStemmer, clearCache, default, stem, stemWord, stemWords } from './de/md_balanced.js';

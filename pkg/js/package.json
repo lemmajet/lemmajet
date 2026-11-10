@@ -1,6 +1,6 @@
 {
   "name": "lemmajet",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Ultra-fast, zero-dependency micro-stemmers and micro-lemmatizers for 6 languages",
   "type": "module",
   "sideEffects": false,
@@ -19,6 +19,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "docs",
     "README.md",
     "LICENSE"
   ],

@@ -8,7 +8,7 @@ from __future__ import annotations
 import importlib
 from types import ModuleType
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("pl", "en", "de", "es", "fr", "cs")
 SIZES: tuple[str, ...] = ("xxs", "xs", "sm", "md", "lg", "xl")
@@ -54,7 +54,7 @@ def load_stemmer(
         variant: Operating point ('precision', 'balanced', 'recall'). Default is 'balanced'.
 
     Returns:
-        Imported Python module containing `stem` and `stem_batch` functions.
+        Imported Python module containing `stem` and `stem_words` functions.
     """
     _validate_profile(lang, size, variant)
     return importlib.import_module(f"lemmajet.stemmer.{lang}.{size}_{variant}")
@@ -73,7 +73,7 @@ def load_lemmatizer(
         variant: Operating point ('precision', 'balanced', 'recall'). Default is 'balanced'.
 
     Returns:
-        Imported Python module containing `lemmatize` and `lemmatize_batch` functions.
+        Imported Python module containing `lemmatize` and `lemmatize_words` functions.
     """
     _validate_profile(lang, size, variant)
     return importlib.import_module(f"lemmajet.lemmatizer.{lang}.{size}_{variant}")
