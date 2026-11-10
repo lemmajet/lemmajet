@@ -130,10 +130,10 @@ jobs:
           packages-dir: pkg/py/dist/
 
   # -------------------------------------------------------------
-  # Publish to NPM with SLSA Provenance
+  # Publish to NPM via OIDC Trusted Publishing
   # -------------------------------------------------------------
   publish-npm:
-    name: Publish to NPM (Provenance)
+    name: Publish to NPM (OIDC)
     needs: [build-dist]
     runs-on: ubuntu-latest
     if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
@@ -145,7 +145,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+      - name: Upgrade npm CLI for OIDC Trusted Publishing
+        run: npm install -g npm@latest
       - name: Publish to NPM with Provenance
         working-directory: pkg/js
         run: |
