@@ -78,26 +78,54 @@ jobs:
           uv run --project pkg/py pytest pkg/sbl/tests/test_sbl_structure.py
 
   # -------------------------------------------------------------
-  # Quality Gate 4: ANSI C & SQLite FTS5 Build & Parity Matrix
+  # Quality Gate 4: ANSI C Library, CLI & Parity Matrix
   # -------------------------------------------------------------
   test-c:
-    name: Test ANSI C & SQLite FTS5
+    name: Test ANSI C
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install C toolchain and SQLite dev headers
+      - name: Install C toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends clang make libsqlite3-dev sqlite3
+          sudo apt-get install -y --no-install-recommends clang make
       - name: Build and test ANSI C library, CLI, and parity suite
         working-directory: pkg/c
         run: |
           make all test test-san
+
+  # -------------------------------------------------------------
+  # Quality Gate 5: SQLite FTS5 Extension (Non-Blocking on Release)
+  # -------------------------------------------------------------
+  test-sqlite:
+    name: Test SQLite FTS5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install C toolchain and build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang make curl unzip tcl
+      - name: Cache SQLite 3.54.1 source build
+        id: cache-sqlite
+        uses: actions/cache@v4
+        with:
+          path: /tmp/sqlite-src-3540100
+          key: sqlite-src-3540100-${{ runner.os }}
+      - name: Download and build SQLite 3.54.1 (with FTS5 + load_extension)
+        if: steps.cache-sqlite.outputs.cache-hit != 'true'
+        run: |
+          cd /tmp
+          curl -fsSL -o sqlite-src-3540100.zip https://www.sqlite.org/2026/sqlite-src-3540100.zip
+          unzip -q sqlite-src-3540100.zip
+          cd sqlite-src-3540100
+          ./configure --enable-json --enable-load-extension --enable-fts5
+          make -j"$(nproc)"
       - name: Build and test SQLite FTS5 extension
         working-directory: pkg/c/sqlite
         run: |
-          make combined
-          make test
+          make combined SQLITE_SRC=/tmp/sqlite-src-3540100
+          make test SQLITE_SRC=/tmp/sqlite-src-3540100
 
   # -------------------------------------------------------------
   # Build Distributions Gate
