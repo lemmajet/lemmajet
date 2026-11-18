@@ -17,7 +17,7 @@ ifeq ($(UNAME_S),Darwin)
     SHARED_FLAGS := -dynamiclib -undefined dynamic_lookup
 else
     SO_EXT := so
-    SHARED_FLAGS := -shared -fPIC
+    SHARED_FLAGS := -shared -fPIC -Wl,-Bsymbolic
 endif
 
 ifdef SQLITE_SRC
