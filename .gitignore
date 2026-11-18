@@ -10,22 +10,35 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
 .pytest_cache/
 .ruff_cache/
 .venv/
 pkg/py/dist/
 pkg/py/uv.lock
+pkg/py/**/*.egg-info/
 
-# Node / JS artifacts
-node_modules/
-package-lock.json
-*.tgz
+# Node / JS artifacts (preserve pkg/js/dist/)
+pkg/js/node_modules/
+pkg/js/package-lock.json
+pkg/js/*.tgz
 
-# Snowball transpilation artifacts
-*.c
-*.h
-*.rs
-*.go
-*.java
+# Snowball in-place transpilation artifacts (pkg/sbl only)
+pkg/sbl/dist/
+pkg/sbl/**/*.c
+pkg/sbl/**/*.h
+pkg/sbl/**/*.rs
+pkg/sbl/**/*.go
+pkg/sbl/**/*.java
 
+# C / SQLite FTS5 build artifacts (pkg/c only)
+pkg/c/build/
+pkg/c/sqlite/build/
+pkg/c/dist/
+pkg/c/**/*.o
+pkg/c/**/*.a
+pkg/c/**/*.so
+pkg/c/**/*.dylib
+pkg/c/**/*.dSYM/
+
+# Release staging directory
+dist/release/

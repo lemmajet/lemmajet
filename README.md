@@ -28,8 +28,9 @@ What you ship to production is a tiny, deterministic, zero-dependency function t
 * **Multi-target code generation:**
   * **JavaScript / TypeScript (Production):** Standalone ES Module (`.js` + `.d.ts`) published on npm ([`lemmajet`](https://www.npmjs.com/package/lemmajet)) for browsers, Node.js, and edge runtimes.
   * **Python (Production):** Single zero-dependency `.py` module published on PyPI ([`lemmajet`](https://pypi.org/project/lemmajet/)) with bit-for-bit identical output to the JS target.
-  * **Snowball DSL (`.sbl`):** Transpiles the compiled model into valid Snowball source code, enabling compilation to native C (PostgreSQL `tsvector`) or Java (Apache Lucene / Elasticsearch).
-  * **Planned Native & Managed Targets:** First-class code emitters in active development for **C** (ANSI C99/C23 single-header / SQLite & PostgreSQL extensions), **Java** (zero-dependency Apache Lucene & OpenSearch analyzers), **Rust** (`no_std`-compatible zero-dependency crate), and **C#** (high-throughput `ReadOnlySpan<char>` runtime for .NET 8+).
+  * **ANSI C & SQLite FTS5 (`pkg/c/`):** Zero-dependency C99/C23 single-header runtime (`lemmajet.h`), static/shared library (`liblemmajet.a`), Snowball `libstemmer` drop-in compatibility, and collision-free SQLite FTS5 extension (`lemmajet_fts5`). See [`pkg/c/README.md`](pkg/c/README.md) and [`docs/sqlite-fts5.md`](docs/sqlite-fts5.md).
+  * **Snowball DSL (`.sbl`):** Transpiles the compiled model into valid Snowball source code (`pkg/sbl/`), enabling compilation via the official Snowball compiler.
+  * **Planned Native & Managed Targets:** First-class code emitters in development for **Java** (zero-dependency Apache Lucene & OpenSearch analyzers), **Rust** (`no_std`-compatible zero-dependency crate), **Go**, and **C#** (high-throughput `ReadOnlySpan<char>` runtime for .NET 8+).
 * **Six languages supported today:** English (`en`), Polish (`pl`), German (`de`), Spanish (`es`), French (`fr`), and Czech (`cs`), across 18 Pareto-calibrated size and objective profiles (`xxs` through `xl`).
 
 ---
@@ -118,15 +119,16 @@ LemmaJet compiles models through a 4-stage pipeline:
 ## Release Roadmap & Status
 
 - [x] **Stage 1 (Live):** Interactive browser demo and multi-language benchmark suite at [lemmajet.org](https://lemmajet.org).
-- [x] **Stage 2 (Live):** Precompiled zero-dependency lemmatizers and stemmers for all 6 languages:
+- [x] **Stage 2 (Live — `0.8.0`):** Precompiled zero-dependency lemmatizers and stemmers for all 6 languages:
   - **npm package:** [`lemmajet`](https://www.npmjs.com/package/lemmajet) (ESM + full TypeScript declarations)
   - **PyPI package:** [`lemmajet`](https://pypi.org/project/lemmajet/) (zero-dependency pure Python)
-  - **Standalone downloads:** Direct `.js` / `.py` artifacts per language and profile
+  - **ANSI C & SQLite FTS5 (`pkg/c/`):** Single-header C99/C23 library, `liblemmajet.a`, CLI, and `lemmajet_fts5` SQLite FTS5 extension
+  - **Snowball DSL (`pkg/sbl/`):** Standalone `.sbl` source models
 - [ ] **Stage 3 (Upcoming Targets):** Dedicated native and managed runtime targets:
-  - **C:** Zero-dependency ANSI C99 / C23 single-header & static library for embedded systems, SQLite, and PostgreSQL `tsvector` extensions.
+  - **PostgreSQL (`PGXS`):** Native `TEXT SEARCH` template extension linking `liblemmajet.a`
   - **Java:** Zero-dependency pure Java runtime for Apache Lucene, OpenSearch, and Elasticsearch analyzers.
   - **Rust:** High-performance `no_std`-compatible zero-dependency crate for search engines, embedded, and WebAssembly runtimes.
-  - **C# / .NET:** High-throughput `ReadOnlySpan<char>` runtime for .NET 8+ and Lucene.NET.
+  - **Go & C# / .NET:** Zero-alloc Go slicing and `ReadOnlySpan<char>` runtime for .NET 8+ and Lucene.NET.
 - [ ] **Stage 4:** Full `lemmajet` Python compiler CLI, Pareto calibration suite, and Snowball `.sbl` emitter source code.
 
 **Star or Watch this repository** to get notified as soon as the precompiled packages and compiler source code are pushed.

@@ -260,6 +260,8 @@ This is the **Synthetic Stem-Bridge** mechanism implemented in the compiler's ex
      2. Stage 3 trie applies `cut=3 ("łem"), add="ć"` $\to$ produces `"widziać"`.
      3. **Stage 3.5** checks `_EXC["widziać"]` $\to$ hits `"widzieć"` and returns `"widzieć"`!
 
+> **Compile-Time Exception Filtering Invariant**: Surface-junk filtering (pure-Hunspell OOV identity, `en_US` foreign leakage, multi-doc `df == 1` hapax, and indexed ED-1 typo gates) and guarded `NONWORD_EXCEPTION_BOOST` apply **exclusively** to surface candidates inside `ExceptionsExtractor` (`lemma` mode). Stage 3.5 stem bridges (`bridge_keys`), `lemmas.parquet` training records (Custom-Jargon Invariant), and runtime inference across all emitters remain completely untouched.
+
 ### Empirical Proof of Stem-Bridge Efficiency (`md-balanced`, 450 exceptions)
 
 Across the full 473,361-word Polish vocabulary and 98,749-word English vocabulary:

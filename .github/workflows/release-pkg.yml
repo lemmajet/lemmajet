@@ -78,11 +78,33 @@ jobs:
           uv run --project pkg/py pytest pkg/sbl/tests/test_sbl_structure.py
 
   # -------------------------------------------------------------
+  # Quality Gate 4: ANSI C & SQLite FTS5 Build & Parity Matrix
+  # -------------------------------------------------------------
+  test-c:
+    name: Test ANSI C & SQLite FTS5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install C toolchain and SQLite dev headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang make libsqlite3-dev sqlite3
+      - name: Build and test ANSI C library, CLI, and parity suite
+        working-directory: pkg/c
+        run: |
+          make all test test-san
+      - name: Build and test SQLite FTS5 extension
+        working-directory: pkg/c/sqlite
+        run: |
+          make combined
+          make test
+
+  # -------------------------------------------------------------
   # Build Distributions Gate
   # -------------------------------------------------------------
   build-dist:
     name: Build Distribution Packages
-    needs: [test-py, test-js, test-sbl]
+    needs: [test-py, test-js, test-sbl, test-c]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -174,12 +196,15 @@ jobs:
         with:
           name: dist-npm
           path: pkg/js/
-      # Staged pending Snowball emitter bug fix per D-12:
-      - name: Package Snowball Tarball & Zip
+      - name: Package Snowball & C Source Tarballs & Zips
         run: |
-          mkdir -p pkg/sbl/dist
-          tar -czf pkg/sbl/dist/lemmajet-sbl-${GITHUB_REF_NAME#v}.tar.gz -C pkg sbl/
-          zip -rq pkg/sbl/dist/lemmajet-sbl-${GITHUB_REF_NAME#v}.zip pkg/sbl/
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist/release
+          tar -czf "dist/release/lemmajet-sbl-${VERSION}.tar.gz" -C pkg sbl/
+          (cd pkg && zip -rq "../dist/release/lemmajet-sbl-${VERSION}.zip" sbl/)
+          tar --exclude='c/build' --exclude='c/sqlite/build' --exclude='c/dist' \
+            -czf "dist/release/lemmajet-c-${VERSION}.tar.gz" -C pkg c/
+          (cd pkg && zip -rq "../dist/release/lemmajet-c-${VERSION}.zip" c/ -x 'c/build/*' 'c/sqlite/build/*' 'c/dist/*')
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -188,6 +213,7 @@ jobs:
             pkg/py/dist/*.whl
             pkg/py/dist/*.tar.gz
             pkg/js/*.tgz
-            # pkg/sbl/dist/lemmajet-sbl-*.tar.gz
-            # pkg/sbl/dist/lemmajet-sbl-*.zip
-
+            dist/release/lemmajet-sbl-*.tar.gz
+            dist/release/lemmajet-sbl-*.zip
+            dist/release/lemmajet-c-*.tar.gz
+            dist/release/lemmajet-c-*.zip
