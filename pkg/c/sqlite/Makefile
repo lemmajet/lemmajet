@@ -55,6 +55,8 @@ COMBINED_TARGET := $(BUILD_DIR)/lemmajet_fts5.$(SO_EXT)
 LANGS ?= pl en de es fr cs
 PROFILES ?= md_balanced
 MODELS ?=
+DOCKER_IMAGE ?= lemmajet-sqlite:latest
+BENCH_ARGS ?=
 
 # Resolve active (lang:profile) pairs from MODELS or LANGS x PROFILES
 ifneq ($(strip $(MODELS)),)
@@ -96,7 +98,7 @@ ifneq ($(and $(strip $(LANG)),$(strip $(PROFILE))),)
         -DLJ_FTS5_MODEL_PROFILE='"$(PROFILE)"'
 endif
 
-.PHONY: all combined model models test check-sqlite check-model-args clean help
+.PHONY: all combined model models test check-sqlite check-model-args clean docker-build docker-test docker-bench help
 
 all: combined
 
@@ -169,6 +171,19 @@ test: check-sqlite
 clean:
 	rm -rf $(BUILD_DIR)
 
+docker-build:
+	docker build -f Dockerfile \
+		--build-arg LANGS="$(LANGS)" \
+		--build-arg PROFILES="$(PROFILES)" \
+		--build-arg MODELS="$(MODELS)" \
+		-t "$(DOCKER_IMAGE)" $(CORE_DIR)
+
+docker-test: docker-build
+	docker run --rm "$(DOCKER_IMAGE)" make -C /src/pkg/c/sqlite test
+
+docker-bench: docker-build
+	docker run --rm "$(DOCKER_IMAGE)" python3 /src/pkg/c/sqlite/bench_fts5.py $(BENCH_ARGS)
+
 help:
 	@echo "LemmaJet SQLite FTS5 Extension Build:"
 	@echo "  make combined SQLITE_SRC=... [LANGS=...] [PROFILES=...] [MODELS=...]"
@@ -176,3 +191,6 @@ help:
 	@echo "  make models SQLITE_SRC=... [LANGS=...] [PROFILES=...]"
 	@echo "  make test SQLITE_SRC=... [SQLITE_CLI=...]"
 	@echo "  make clean"
+	@echo "  make docker-build [LANGS=...] [PROFILES=...] [MODELS=...]"
+	@echo "  make docker-test"
+	@echo "  make docker-bench [BENCH_ARGS=\"--langs en --docs 1000\"]"

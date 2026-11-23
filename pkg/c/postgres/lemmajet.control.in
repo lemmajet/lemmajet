@@ -1,0 +1,5 @@
+# LemmaJet @LANG@ Full-Text Search Dictionary Extension
+comment = 'LemmaJet zero-dependency @LANG@ stemmer and lemmatizer text search dictionary'
+default_version = '1.0'
+module_pathname = '$libdir/lemmajet_@LANG@'
+relocatable = true

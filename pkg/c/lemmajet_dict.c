@@ -22,9 +22,14 @@ static int lj_dict_strcasecmp(const char* s1, const char* s2) {
 }
 
 /* Modular model accessors (linked from separate .o files in liblemmajet.a) */
+#ifdef LEMMAJET_DISABLE_STEM
+#define LJ_DECL_PAIR(lang, profile) \
+    extern const lemmajet_model_t* lj_get_##lang##_lemma_##profile(void);
+#else
 #define LJ_DECL_PAIR(lang, profile) \
     extern const lemmajet_model_t* lj_get_##lang##_stem_##profile(void); \
     extern const lemmajet_model_t* lj_get_##lang##_lemma_##profile(void);
+#endif
 
 #ifdef LEMMAJET_ENABLE_PL_SM_BALANCED
 LJ_DECL_PAIR(pl, sm_balanced)
@@ -81,8 +86,13 @@ typedef struct {
     lj_model_getter_fn lemma_fn;
 } lj_dict_entry_t;
 
+#ifdef LEMMAJET_DISABLE_STEM
+#define LJ_ENTRY(iso, name, profile) \
+    {#iso, name, #profile, NULL, lj_get_##iso##_lemma_##profile}
+#else
 #define LJ_ENTRY(iso, name, profile) \
     {#iso, name, #profile, lj_get_##iso##_stem_##profile, lj_get_##iso##_lemma_##profile}
+#endif
 
 static const lj_dict_entry_t LJ_DICT_TABLE[] = {
 #ifdef LEMMAJET_ENABLE_PL_SM_BALANCED

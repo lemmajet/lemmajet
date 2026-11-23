@@ -1,0 +1,31 @@
+-- complain if script is sourced in psql, rather than via CREATE EXTENSION
+\echo Use "CREATE EXTENSION lemmajet_@LANG@" to load this file. \quit
+
+CREATE FUNCTION lemmajet_@LANG@_dinit(internal)
+    RETURNS internal
+    AS 'MODULE_PATHNAME', 'lemmajet_@LANG@_dinit'
+    LANGUAGE C PARALLEL SAFE;
+
+CREATE FUNCTION lemmajet_@LANG@_dlexize(internal, internal, internal, internal)
+    RETURNS internal
+    AS 'MODULE_PATHNAME', 'lemmajet_@LANG@_dlexize'
+    LANGUAGE C PARALLEL SAFE;
+
+CREATE TEXT SEARCH TEMPLATE lemmajet_@LANG@_template (
+    INIT = lemmajet_@LANG@_dinit,
+    LEXIZE = lemmajet_@LANG@_dlexize
+);
+
+CREATE TEXT SEARCH DICTIONARY lemmajet_@LANG@_dict (
+    TEMPLATE = lemmajet_@LANG@_template,
+    Mode = 'lemma',
+    Profile = 'md_balanced'
+);
+
+CREATE TEXT SEARCH CONFIGURATION lemmajet_@LANG@ (
+    COPY = pg_catalog.simple
+);
+
+ALTER TEXT SEARCH CONFIGURATION lemmajet_@LANG@
+    ALTER MAPPING FOR asciiword, asciihword, hword_asciipart, word, hword, hword_part
+    WITH lemmajet_@LANG@_dict;

@@ -89,6 +89,22 @@ make -C pkg/c sqlite SQLITE_SRC=/path/to/sqlite-src-3540100 LANGS="pl en" PROFIL
 make -C pkg/c/sqlite SQLITE_SRC=/path/to/sqlite-src-3540100 test
 ```
 
+### Optional Docker Build, Test & Benchmark
+
+On macOS, Windows, or Linux hosts without a local `sqlite-src` build or C toolchain, you can build `lemmajet_fts5.so`, run `make test`, and run `bench_fts5.py` inside a self-contained Debian container:
+
+```bash
+# Build the Docker image (optional LANGS=... PROFILES=... MODELS=...)
+make -C pkg/c/sqlite docker-build
+
+# Run multi-extension FTS5 smoke tests in Docker
+make -C pkg/c/sqlite docker-test
+
+# Run the 6-language benchmark in Docker
+make -C pkg/c/sqlite docker-bench
+make -C pkg/c/sqlite docker-bench BENCH_ARGS="--langs pl,en --docs 1000"
+```
+
 ---
 
 ## 4. Loading & SQL `tokenize` Syntax

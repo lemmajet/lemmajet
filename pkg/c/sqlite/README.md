@@ -45,6 +45,27 @@ make clean
 
 ---
 
+## Docker (Optional, Zero-Setup)
+
+If you do not have a local `SQLITE_SRC` build or C toolchain, you can build, test, and benchmark the Linux `.so` inside Docker:
+
+```bash
+cd pkg/c/sqlite
+
+# Build image with combined lemmajet_fts5.so (optional LANGS/PROFILES/MODELS)
+make docker-build
+make docker-build LANGS="pl en" PROFILES="sm_balanced md_balanced"
+
+# Run multi-extension FTS5 smoke tests inside the container
+make docker-test
+
+# Run bench_fts5.py inside the container
+make docker-bench
+make docker-bench BENCH_ARGS="--langs pl,en --docs 1000"
+```
+
+---
+
 ## SQL `tokenize` One-Liners
 
 ### Combined Extension
@@ -104,6 +125,16 @@ SELECT title FROM en_docs WHERE en_docs MATCH '^added';                    -- in
 ```
 
 > **Note on `*` prefix queries:** Because `FTS5_TOKENIZE_PREFIX` passes the query prefix through unlemmatized (while indexed tokens are lemmatized/stemmed), `prefix*` matches tokens whose **normalized lemma/stem** starts with `prefix`. See the [SQLite FTS5 documentation](https://sqlite.org/fts5.html) for full details on `bm25()` column weights, `highlight()`, `snippet()`, and query syntax.
+
+---
+
+## Quick Interactive Demo (`sqlite-demo.sh`)
+
+Run the side-by-side 32-variant English tense/voice comparison (`unicode61` vs `porter` vs `lemmajet`), over-stemming checks, `bm25()` / `snippet()` / `*` / `NEAR` queries, and throughput benchmarks:
+
+```bash
+bash pkg/c/sqlite/sqlite-demo.sh --sqlite-src /path/to/sqlite-src
+```
 
 ---
 

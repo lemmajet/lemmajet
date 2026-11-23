@@ -377,21 +377,52 @@ def run_bench_for_config(
 
 
 def format_markdown_table(results: list[dict]) -> str:
-    header = (
-        "| Lang | Config | Smoke | Vocab Terms | Vocab Red. | Docs/sec | Index ms | Query 50x ms | Ext KB | Obj KB |\n"
-        "|------|--------|-------|-------------|------------|----------|----------|--------------|--------|--------|"
-    )
-    lines = [header]
+    headers = [
+        "Lang",
+        "Config",
+        "Smoke",
+        "Vocab Terms",
+        "Vocab Red.",
+        "Docs/sec",
+        "Index ms",
+        "Query 50x ms",
+        "Ext KB",
+        "Obj KB",
+    ]
+    right_align = {3, 4, 5, 6, 7, 8, 9}
+    rows: list[list[str]] = []
     for r in results:
         ext_kb = f"{r['ext_bytes'] / 1024:.1f}" if r["ext_bytes"] else "-"
         obj_kb = f"{r['obj_bytes'] / 1024:.1f}" if r["obj_bytes"] else "-"
-        red = f"{r['vocab_reduction_pct']:+.1f}%"
-        lines.append(
-            f"| {r['lang']} | {r['config']} | {r['smoke_passed']}/{r['smoke_total']} "
-            f"| {r['vocab_terms']} | {red} | {r['docs_per_sec']} "
-            f"| {r['index_ms']:.1f} | {r['query_ms']:.1f} | {ext_kb} | {obj_kb} |"
+        rows.append(
+            [
+                str(r["lang"]),
+                str(r["config"]),
+                f"{r['smoke_passed']}/{r['smoke_total']}",
+                str(r["vocab_terms"]),
+                f"{r['vocab_reduction_pct']:+.1f}%",
+                str(r["docs_per_sec"]),
+                f"{r['index_ms']:.1f}",
+                f"{r['query_ms']:.1f}",
+                ext_kb,
+                obj_kb,
+            ]
         )
-    return "\n".join(lines)
+
+    widths = [
+        max(len(headers[i]), *(len(row[i]) for row in rows)) if rows else len(headers[i])
+        for i in range(len(headers))
+    ]
+
+    def fmt_row(cells: list[str]) -> str:
+        formatted = [
+            cell.rjust(widths[i]) if i in right_align else cell.ljust(widths[i])
+            for i, cell in enumerate(cells)
+        ]
+        return "| " + " | ".join(formatted) + " |"
+
+    sep = "|-" + "-|-".join("-" * w for w in widths) + "-|"
+    return "\n".join([fmt_row(headers), sep, *(fmt_row(row) for row in rows)])
 
 
 def parse_list_arg(raw: str | None, default: list[str]) -> list[str]:
@@ -505,6 +536,19 @@ def main() -> int:
                 )
 
     print(format_markdown_table(results))
+    print(
+        "\nColumns:\n"
+        "  Lang         Language code (pl, en, de, es, fr, cs)\n"
+        "  Config       FTS5 tokenizer (unicode61, porter for en, or lemmajet_<profile>)\n"
+        "  Smoke        Curated inflection & over-stemming checks passed (passed/total)\n"
+        "  Vocab Terms  Unique indexed terms in fts5vocab(docs, row)\n"
+        "  Vocab Red.   Vocabulary reduction vs. unicode61 baseline (higher is better)\n"
+        "  Docs/sec     Bulk INSERT indexing throughput (documents/sec)\n"
+        "  Index ms     Total time to create FTS5 table and insert all documents (ms)\n"
+        "  Query 50x ms Total time for 50 consecutive MATCH count queries (ms)\n"
+        "  Ext KB       Compiled loadable extension size (.so / .dylib in KB)\n"
+        "  Obj KB       Compiled model object files size (stem + lemma .o in KB)"
+    )
 
     if args.json_out:
         out_path = Path(args.json_out)

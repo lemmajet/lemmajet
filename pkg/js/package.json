@@ -1,6 +1,6 @@
 {
   "name": "lemmajet",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Ultra-fast, zero-dependency micro-stemmers and micro-lemmatizers for 6 languages",
   "type": "module",
   "sideEffects": false,

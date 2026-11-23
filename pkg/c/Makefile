@@ -44,7 +44,7 @@ DICT_DEFINES := $(foreach pair,$(ACTIVE_PAIRS),\
 
 CORE_OBJS := $(BUILD_DIR)/lemmajet_runtime.o $(BUILD_DIR)/lemmajet_dict.o
 
-.PHONY: all cli test test-san bench sqlite clean help
+.PHONY: all cli test test-san bench sqlite postgres clean help
 
 all: $(STATIC_LIB) $(SHARED_LIB) $(CLI_BIN)
 
@@ -124,6 +124,9 @@ $(BENCH_BIN): benchmarks/bench_c.c lemmajet.h $(REGISTRY_H) | $(BUILD_DIR)
 sqlite: $(STATIC_LIB)
 	$(MAKE) -C sqlite LANGS="$(LANGS)" PROFILES="$(PROFILES)"
 
+postgres:
+	$(MAKE) -C postgres LANGS="$(LANGS)" PROFILES="$(PROFILES)"
+
 clean:
 	rm -rf $(BUILD_DIR)
 
@@ -135,5 +138,6 @@ help:
 	@echo "  make test-san - Build and execute ASan/UBSan C FTS ABI test suite ($(TEST_SAN_BIN))"
 	@echo "  make bench    - Build and execute microbenchmark harness ($(BENCH_BIN))"
 	@echo "  make sqlite   - Build SQLite FTS5 extension (pass SQLITE_SRC=...)"
+	@echo "  make postgres - Build PostgreSQL PGXS extensions (delegates to pkg/c/postgres/Makefile)"
 	@echo "  make clean    - Remove build artifacts"
 	@echo "Variables: LANGS=\"$(LANGS)\" PROFILES=\"$(PROFILES)\""

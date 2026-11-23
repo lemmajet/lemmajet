@@ -8,7 +8,7 @@ from __future__ import annotations
 import importlib
 from types import ModuleType
 
-__version__ = "0.8.0"
+__version__ = "0.8.1"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("pl", "en", "de", "es", "fr", "cs")
 SIZES: tuple[str, ...] = ("xxs", "xs", "sm", "md", "lg", "xl")
